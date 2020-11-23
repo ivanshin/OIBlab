@@ -5,10 +5,12 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import QPixmap
 from watermark import Ui_Dialog
 import subprocess, os, platform
+import warnings
 from datetime import datetime
 from client import *
 
 sys.path.append("pyqt path")
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 # Create app
 app = QtWidgets.QApplication(sys.argv)
@@ -21,6 +23,7 @@ ui.setupUi(Dialog)
 Dialog.show()
 
 # Hool logic
+im = ''
 imagePath = ''
 now = datetime.now()
 dt_string = now.strftime("%Y-%m-%d--%H-%M-%S")
@@ -46,34 +49,36 @@ def clickable(widget):
     widget.installEventFilter(filter)
     return filter.clicked
 
-def openFullSize():
-	if imagePath:
+def openFullSize(imPath):
+	if imPath:
 		if platform.system() == 'Darwin':       # macOS
 			try:
-				subprocess.call(('open', imagePath))
-				addToLog('# FILE  \''+ imagePath + '\' WAS OPENED AT FULL SIZE')
+				subprocess.call(('open', imPath))
+				addToLog('# FILE  \''+ imPath + '\' WAS OPENED AT FULL SIZE')
 			except OSError:
 				addToLog('# ERROR: UNCNOWN ERROR')
 		elif platform.system() == 'Windows':    # Windows
 			try:
-				subprocess.call(imagePath, shell=True)
-				addToLog('# FILE  \''+ imagePath + '\' WAS OPENED AT FULL SIZE')
+				subprocess.call(imPath, shell=True)
+				addToLog('# FILE  \''+ imPath + '\' WAS OPENED AT FULL SIZE')
 			except OSError:
 				addToLog('# ERROR: UNCNOWN ERROR')
 		else:                                   # linux variants
 			try:
-				subprocess.call(('xdg-open', imagePath))
-				addToLog('# FILE  \''+ imagePath + '\' WAS OPENED AT FULL SIZE')
+				subprocess.call(('xdg-open', imPath))
+				addToLog('# FILE  \''+ imPath + '\' WAS OPENED AT FULL SIZE')
 			except OSError:
 				addToLog('# ERROR: UNCNOWN ERROR')
 	
 
 def getImage():
+	global im
 	global imagePath
 	if not imagePath:
 		qfd = QFileDialog()
 		fName = QFileDialog.getOpenFileName(qfd, 'Open File', '', 'Images (*.png *.jpg *.bmp)')
 		imagePath = fName[0]
+		im = imagePath
 		if imagePath:
 			showImage(imagePath)
 			addToLog('# FILE WAS SELECTED: ' + imagePath)
@@ -82,11 +87,13 @@ def getImage():
 		qfd = QFileDialog()
 		fName = QFileDialog.getOpenFileName(qfd, 'Open File', '', 'Images (*.png *.jpg *.bmp)')
 		imagePath = fName[0]
+		im = imagePath
 		if imagePath:
 			showImage(imagePath)
 			addToLog('# FILE WAS SELECTED: ' + imagePath)
 		else:
 			imagePath = tempPath
+			im = imagePath
 
 
 def showImage(pathF):
@@ -100,24 +107,35 @@ def addToLog(text):
 	logFile.write(text + '\n')
 
 def start_button():
+	global im
 	if imagePath:
 		addToLog('# IMAGE \'' + imagePath + '\' HAS BEEN SENT FOR PROCESSING......')
-		try:
-			save_image(get_watermark_image(imagePath))
-		except IOError:
-			addToLog('# ERROR: NO SUCH FILE OR DIRECTORY')
-		except BaseException:
+		im = get_watermark_image(imagePath)
+		if im == '1001':
+			addToLog('# ERROR: HTTP ERROR')
+		elif im == '1002':
+			addToLog('# ERROR: ERROR CONNECTING')
+		elif im == '1003':
+			addToLog('# ERROR: TIMEOUT ERROR')
+		elif im == '1004':
 			addToLog('# ERROR: INTERNAL SERVER ERROR')
 		else:
-			addToLog('# IMAGE \'' + imagePath + '\' PROCESSED SUCCESSFULLY')
-			pathFile = 'Processed image.png'
-			showImage(pathFile)
+			try:
+				save_image(im)
+			except IOError:
+				addToLog('# ERROR: NO SUCH FILE OR DIRECTORY')
+			except BaseException:
+				addToLog('# ERROR: INTERNAL SERVER ERROR')
+			else:
+				addToLog('# IMAGE \'' + imagePath + '\' PROCESSED SUCCESSFULLY')
+				im = 'Processed image.png'
+				showImage(im)
 	else:
 		addToLog('# ERROR: FILE NOT SELECTED')
 
 ui.pushButton.clicked.connect(getImage)
 ui.pushButton_2.clicked.connect(start_button)
-clickable(ui.label).connect(openFullSize)
+clickable(ui.label).connect(lambda: openFullSize(im))
 
 # Main loop
 sys.exit(app.exec_())
