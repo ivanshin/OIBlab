@@ -26,17 +26,14 @@ def get_watermark_image(imagename):
 
 	except requests.exceptions.HTTPError as errh:
     		print ("Http Error:",errh)
+		return '1001'
 	except requests.exceptions.ConnectionError as errc:
     		print ("Error Connecting:",errc)
+		return '1002'
 	except requests.exceptions.Timeout as errt:
  	        print ("Timeout Error:",errt)
+		return '1003'
 	except requests.exceptions.RequestException as err:
    	        print ("OOps: Something Else",err)
-		
+		return '1004'
    	        raise SystemExit(err)
-		
-       	        
-
-
-
-#save_image(get_watermark_image('C:\\Users\\user\\Desktop\\1.png'))
