@@ -4,7 +4,7 @@ from PIL import Image
 import numpy
 import cv2
 import io
-from prog import watermark_photo
+from make_watermark_on_photo import watermark_photo
 from save_instruments import save_original_image, save_edited_image, add_to_origin_table, add_to_edited_table
 import os
 try:
