@@ -152,3 +152,6 @@ def test():
     im = Image.open('image.png')
     save_original_image(im, 'im.png')
     save_edited_image(im, 'im.png')
+    
+    
+# test()
