@@ -70,6 +70,7 @@ def openFullSize(imPath):
 			except OSError:
 				addToLog('# ERROR: UNCNOWN ERROR')
 	
+
 def getImage():
 	global im
 	global imagePath
@@ -93,7 +94,8 @@ def getImage():
 		else:
 			imagePath = tempPath
 			im = imagePath
-	
+
+
 def showImage(pathF):
 	if pathF:
 		pixmap = QPixmap(pathF)
@@ -102,8 +104,8 @@ def showImage(pathF):
 
 def addToLog(text):
 	ui.textBrowser.append(text)
-	logFile.write(text + '\n')	
-	
+	logFile.write(text + '\n')
+
 def start_button():
 	global im
 	if imagePath:
@@ -130,6 +132,10 @@ def start_button():
 				showImage(im)
 	else:
 		addToLog('# ERROR: FILE NOT SELECTED')
+
+ui.pushButton.clicked.connect(getImage)
+ui.pushButton_2.clicked.connect(start_button)
+clickable(ui.label).connect(lambda: openFullSize(im))
 
 # Main loop
 sys.exit(app.exec_())
